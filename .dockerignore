@@ -1,0 +1,8 @@
+.git/
+.env.local
+.env.*.local
+var/
+vendor/
+*.md
+docker-compose.yml
+docker-compose.*.yml
