@@ -21,7 +21,7 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
-    App\Controller\BookCoverUploadController:
+    App\Service\BookCoverUploadService:
         arguments:
             $coverImagesDir: '%cover_images_dir%'
 

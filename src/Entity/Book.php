@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\Get;
@@ -10,9 +11,8 @@ use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Put;
 use App\Controller\BookCoverUploadController;
 use App\Repository\BookRepository;
-use DateTimeImmutable;
-use Doctrine\ORM\Event\PreUpdateEventArgs;
 use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Event\PreUpdateEventArgs;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\Serializer\Attribute\Groups;
@@ -28,6 +28,8 @@ use Symfony\Component\Validator\Constraints as Assert;
         new Put(normalizationContext: ['groups' => ['book:write:output']]),
         new Delete(),
         new Post(
+            normalizationContext: ['groups' => ['book:write:cover']],
+            denormalizationContext: ['groups' => ['book:write:cover']],
             uriTemplate: '/books/{id}/cover',
             controller: BookCoverUploadController::class,
             deserialize: false,
@@ -44,7 +46,7 @@ class Book
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['book:read', 'book:write:output'])]
+    #[Groups(['book:read', 'book:write:output', 'book:write:cover'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 150)]
@@ -60,9 +62,11 @@ class Book
     private ?string $resume = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['book:read', 'book:write:output'])]
+    #[Groups(['book:read', 'book:write:output','book:write:cover'])]
     private ?string $coverImagePath = null;
 
+    #[ApiProperty(openapiContext: ['type' => 'string', 'format' => 'binary'])]
+    #[Groups(['book:write:cover'])]
     #[Assert\Image(
         maxSize: '5M',
         mimeTypes: ['image/jpeg', 'image/png'],
@@ -73,16 +77,16 @@ class Book
 
     #[ORM\Column]
     #[Groups(['book:read'])]
-    private ?DateTimeImmutable $createdAt = null;
+    private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\Column(nullable: true)]
     #[Groups(['book:read'])]
-    private ?DateTimeImmutable $updatedAt = null;
+    private ?\DateTimeImmutable $updatedAt = null;
 
     #[ORM\PrePersist]
     public function initCreatedAt(): void
     {
-        $this->createdAt = new DateTimeImmutable();
+        $this->createdAt = new \DateTimeImmutable();
     }
 
     #[ORM\PreUpdate]
@@ -91,7 +95,7 @@ class Book
         if ($args->hasChangedField('createdAt')) {
             $this->createdAt = $args->getOldValue('createdAt');
         }
-        $this->updatedAt = new DateTimeImmutable();
+        $this->updatedAt = new \DateTimeImmutable();
     }
 
     public function getId(): ?int
@@ -159,29 +163,27 @@ class Book
         return $this;
     }
 
-    public function getCreatedAt(): ?DateTimeImmutable
+    public function getCreatedAt(): ?\DateTimeImmutable
     {
         return $this->createdAt;
     }
 
-    public function setCreatedAt(DateTimeImmutable $createdAt): static
+    public function setCreatedAt(\DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
 
         return $this;
     }
 
-    public function getUpdatedAt(): ?DateTimeImmutable
+    public function getUpdatedAt(): ?\DateTimeImmutable
     {
         return $this->updatedAt;
     }
 
-    public function setUpdatedAt(?DateTimeImmutable $updatedAt): static
+    public function setUpdatedAt(?\DateTimeImmutable $updatedAt): static
     {
         $this->updatedAt = $updatedAt;
 
         return $this;
     }
-
 }
-
